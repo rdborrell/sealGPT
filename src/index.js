@@ -1,9 +1,11 @@
 require('dotenv').config();
+
 const {Client, IntentsBitField} = require('discord.js');
 const {Configuration, OpenAIApi} = require('openai');
 
 const openai = new OpenAIApi(new Configuration ({
-    apiKey: process.env.API_KEY,
+    organization: process.env.ORG,
+    apiKey: process.env.API_KEY
 }))
 
 const client = new Client({
@@ -18,7 +20,7 @@ const client = new Client({
 const prefix = '!';
 
 client.on('ready', () => {
-    console.log(`Logged in as ${client.user.tag}`);
+    console.log(`${client.user.tag} is ready >:)`);
   });
   
   client.on('messageCreate', async message => {
@@ -29,24 +31,26 @@ client.on('ready', () => {
   
     switch (command) {
       case 'ask':
-        openai.createCompletion({
-          engine: 'davinci',
-          prompt: args.join(' '),
-          maxTokens: 1024,
-          n: 1,
-          stop: '\n',
+        openai.createChatCompletion({
+          model: "gpt-3.5-turbo",
+          messages: [{role: "user", content: args.join(' ')}],
         }).then(res => {
-          console.log(res.choices[0].text);
-          message.channel.send(res.choices[0].text);
-        }).catch(err => {
-          console.error(err);
-          message.channel.send('There was an error processing your request.');
-        });
+          console.log(res.data.choices[0].message.content);
+          message.channel.send(res.data.choices[0].message.content);
+        })
+        break;
+      case 'help':
+        message.channel.send('Use !ask to ask sealGPT anything!');
+        break;
+      case 'pet':
+        message.channel.send('Thank you :)');
         break;
       default:
         message.channel.send(`Unknown command: \`${command}\``);
         break;
     }
   });
+
+  
   
   client.login(process.env.TOKEN);
